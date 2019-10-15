@@ -4,8 +4,21 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'stats-js';
 import * as createjs from 'createjs-module';
+import AlignHelper from './AlignHelper';
+import TweenableMesh from './TweenableMesh';
+import { AxesHelper } from 'three';
 
 class Scene extends React.Component {
+
+    TWEENS_NUM = 30;
+    ITEM_ROWS_NUM = 18;
+    ITEM_COLS_NUM = 10;
+    JUMP_HEIGHT = 2;
+    JUMP_DURATION = 1000;
+    ROT_DURATION = 2000;
+    PIXEL_RATIO_FACTOR = 2;
+    
+
     constructor(props) {
         super(props);
         this.start = this.start.bind(this)
@@ -26,12 +39,15 @@ class Scene extends React.Component {
             0.01,
             1000
         )
-        camera.position.set(-40, 10, 20);
-        camera.lookAt(0, -5, 0);
+        camera.position.set( 9.520364644833174, 5.164962376737971, 12.35157275260960);
+        // camera.position.set(-40, 10, 20);
+        camera.lookAt(0, 0, 0);
 
+        const ah = new AxesHelper(2);
+        scene.add(ah)
 
         const renderer = new THREE.WebGLRenderer({ antialias: true })
-
+        renderer.setPixelRatio(window.devicePixelRatio / this.PIXEL_RATIO_FACTOR);
         // set background color
         renderer.setClearColor('#bbbbbb', 1);
 
@@ -48,7 +64,7 @@ class Scene extends React.Component {
             (gltf) => this.onModelLoaded(gltf),
             undefined,
             function (error) {
-                throw new Error("Model loading error");
+                throw error
             });
 
         // set up lights
@@ -64,6 +80,7 @@ class Scene extends React.Component {
 
         this.orbitControl = new OrbitControls(camera, renderer.domElement);
         this.orbitControl.zoomSpeed = 5.0;
+ 
 
         this.stats = new Stats();
         document.body.appendChild(this.stats.dom);
@@ -78,56 +95,66 @@ class Scene extends React.Component {
     }
 
     onModelLoaded(gltf) {
-        this.makeArray(20, 20, gltf.scene)
-    }
-
-    makeArray(rows, cols, model) {
-        model.scale.set(1, 1, 1);
-        const xGap = 2;
-        const zGap = 2.55;
-        let cnt = 0;
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                let instance = model.clone();
-                instance.position.x = -(xGap * cols) / 2 + j * xGap
-                instance.position.z = -(zGap * rows) / 2 + i * zGap + (j % 2 === 0 ? zGap / 2 : 0);
-
-                // animaty every other one 
-                if ((cnt++ + i) % 2 === 0) {
-                    this.animateModel(instance);
-                }
-                this.scene.add(instance);
-            }
-        }
-    }
-
-    animateModel(model) {
-        // full, half, quarter, sixth
+        const arrangeCountVec = new THREE.Vector3(this.ITEM_ROWS_NUM, 1, this.ITEM_COLS_NUM);    // how many instances in each axis
+        const gapVec = new THREE.Vector3(0.65, 0, 2);
+        const alignHelper = new AlignHelper(gapVec, arrangeCountVec);
+        const arrangement = alignHelper.getPositions();
         const fRot = Math.PI * 2;
         const rot6 = fRot / 6;
-        const jumpHeight = 4;
+        
 
-        const randomDue = Math.random() * 1000;
-
+        let models = gltf.scene.children[0].children;
+        for (let i = 0 ; i < models.length ; i++) {
+            models[i].geometry.rotateX(Math.PI / 2);
+            models[i].geometry.rotateY(Math.PI / 2);
+            models[i].geometry.rotateX(rot6/2);
+        }
+        this.models = new TweenableMesh(this.scene, models, arrangement);
+        
+        const tweens = []
+        const qTweens = []
         const dir = 1;//Math.random() >0.5 ? 1 : -1;
-        
-        // position
-        createjs.Tween.get(model.position, { loop: true })
-            .wait(randomDue)
-            .to({ y: model.position.y + jumpHeight }, 2000, createjs.Ease.backInOut)
-            .wait(4000)
-            .to({ y: model.position.y }, 2000, createjs.Ease.backInOut)
-            .wait(2000 - randomDue);
-        
-        // animate rotation
-        createjs.Tween.get(model.rotation, { loop: true })
-            .wait(randomDue)
-            .wait(1500)
-            .to({ x: 3 * dir * rot6 }, 4000, createjs.Ease.backInOut)
-            .wait(2500 - randomDue)
-            .wait(2000);
-     }
 
+        const loopDuration = 3000;
+            
+        for (var i = 0; i < this.TWEENS_NUM ; i++) {
+            var pos = new THREE.Vector3();
+            const randomDue = Math.random() * 2000;
+           
+            // animate every other item
+            // if (0 === 0) {
+                let time = 0;
+                const tween = createjs.Tween.get(pos, { loop: true })
+                .wait(randomDue)
+                .to({ y: this.JUMP_HEIGHT }, this.JUMP_DURATION, createjs.Ease.quadInOut)
+                .wait(2000)
+                .to({ y: 0 }, this.JUMP_DURATION, createjs.Ease.quadInOut)
+                .wait(2000 - randomDue);
+                tweens.push(tween);
+            // }
+            // else {
+            //     tweens.push(createjs.Tween.get(pos, {loop: true}).to({x:0},100));
+            // }
+            // animate rotation
+            let eul = new THREE.Euler()
+            const qTween = createjs.Tween.get(eul, { loop: true })
+                .wait(1500)
+                // .wait(1500)
+                .to({ x: 4 * dir * rot6 }, this.ROT_DURATION, createjs.Ease.getBackInOut(0.5))
+                .wait(1500 - randomDue);
+            
+            // sync duration of tweens
+            if (tween.duration > qTween.duration) {
+                qTween.wait(tween.duration - qTween.duration)
+            }
+            
+            qTweens.push(qTween)
+        }
+        this.models.setPositionTweens(tweens);
+        this.models.setQuaternionTweens(qTweens);
+
+    }
+ 
     componentWillUnmount() {
         this.stop()
         this.mount.removeChild(this.renderer.domElement)
@@ -146,6 +173,10 @@ class Scene extends React.Component {
     animate() {
         this.stats.begin();
         this.renderScene();
+        if (this.models) {
+            this.models.update();
+        }
+        // console.log(this.camera.position)
         this.orbitControl.update();
         this.stats.end()
         this.frameId = window.requestAnimationFrame(this.animate)
