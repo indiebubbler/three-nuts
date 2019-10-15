@@ -43,8 +43,8 @@ class Scene extends React.Component {
         // camera.position.set(-40, 10, 20);
         camera.lookAt(0, 0, 0);
 
-        const ah = new AxesHelper(2);
-        scene.add(ah)
+        // const ah = new AxesHelper(2);
+        // scene.add(ah)
 
         const renderer = new THREE.WebGLRenderer({ antialias: true })
         renderer.setPixelRatio(window.devicePixelRatio / this.PIXEL_RATIO_FACTOR);
