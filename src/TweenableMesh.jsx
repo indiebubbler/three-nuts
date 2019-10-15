@@ -1,7 +1,4 @@
 import * as THREE from 'three'
- 
-import AlignHelper from './AlignHelper'; 
-
 
 THREE.InstancedMesh.prototype.getMatrixAt = function (index) {
     let m = [];
@@ -92,7 +89,7 @@ class TweenableMesh {
     } 
 
     update() {
-        if (this.initialArrangement.length != this.amount) {
+        if (this.initialArrangement.length !== this.amount) {
             throw new Error("Instances number mismatch")
         }
         for (var i = 0; i < this.meshes.length; i++) {

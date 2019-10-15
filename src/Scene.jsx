@@ -115,15 +115,12 @@ class Scene extends React.Component {
         const qTweens = []
         const dir = 1;//Math.random() >0.5 ? 1 : -1;
 
-        const loopDuration = 3000;
-            
         for (var i = 0; i < this.TWEENS_NUM ; i++) {
             var pos = new THREE.Vector3();
             const randomDue = Math.random() * 2000;
            
             // animate every other item
             // if (0 === 0) {
-                let time = 0;
                 const tween = createjs.Tween.get(pos, { loop: true })
                 .wait(randomDue)
                 .to({ y: this.JUMP_HEIGHT }, this.JUMP_DURATION, createjs.Ease.quadInOut)
@@ -143,11 +140,13 @@ class Scene extends React.Component {
                 .to({ x: 4 * dir * rot6 }, this.ROT_DURATION, createjs.Ease.getBackInOut(0.5))
                 .wait(1500 - randomDue);
             
-            // sync duration of tweens
+            // sync duration of both tweens
             if (tween.duration > qTween.duration) {
                 qTween.wait(tween.duration - qTween.duration)
             }
-            
+            else {
+                tween.wait(qTween.duration - tween.duration)
+            }
             qTweens.push(qTween)
         }
         this.models.setPositionTweens(tweens);
