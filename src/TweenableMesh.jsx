@@ -14,9 +14,7 @@ THREE.InstancedMesh.prototype.getMatrixAt = function (index) {
 
 class TweenableMesh {
     scale = new THREE.Vector3(1, 1, 1);
-
-    gapX = 3;
-    gapZ = 4;
+ 
     meshes = [];
 
     qTweens = []
@@ -27,12 +25,7 @@ class TweenableMesh {
     initialArrangement = [];
     constructor(scene, meshes, arrangement) {
         const models = meshes.length ? meshes : [meshes]
-
-        // this.arrangeCountVec = new THREE.Vector3(3, 3, 1);    // how many instances in each axis
-        // this.gapVec = new THREE.Vector3(1, 1, 1);
-
-        // this.amount = this.arrangeCountVec.x * this.arrangeCountVec.y * this.arrangeCountVec.z;
-
+ 
         this.amount = arrangement.length;
         
         this.initialArrangement = arrangement;
@@ -61,14 +54,11 @@ class TweenableMesh {
 
         for (let i = 0; i < this.meshes.length; i++) {
             for (let j = 0; j < this.amount; j++) {
-                // this.dummy.matrix.set(this.meshes[i].)
                 var m = this.meshes[i].getMatrixAt(j);
                 this.dummy.matrix.set(m)
                 this.dummy.scale.set(this.scale.x, this.scale.y, this.scale.z)
                 this.dummy.updateMatrix();
                 this.meshes[i].setMatrixAt(j, this.dummy.matrix)
-                // this.meshes[i].scale.set(scale.x, scale.y, scale.z);
-                // this.meshes[i].instanceMatrix.needsUpdate = true;
             }
             this.meshes[i].instanceMatrix.needsUpdate = true;
         }
@@ -89,7 +79,6 @@ class TweenableMesh {
             }
             this.posTweensMap.push(idx)
         }
-        // debugger
     }
 
 
