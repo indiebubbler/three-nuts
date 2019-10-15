@@ -7,8 +7,7 @@ import * as createjs from 'createjs-module';
 
 class Scene extends React.Component {
     constructor(props) {
-        super(props)
-
+        super(props);
         this.start = this.start.bind(this)
         this.stop = this.stop.bind(this)
         this.animate = this.animate.bind(this)
@@ -16,7 +15,7 @@ class Scene extends React.Component {
 
     componentDidMount() {
         // set title
-        document.title = "Threejs demo"
+        document.title = "BUCK joe_ryba's art in threejs"
         const width = this.mount.clientWidth
         const height = this.mount.clientHeight
 
@@ -34,21 +33,25 @@ class Scene extends React.Component {
         const renderer = new THREE.WebGLRenderer({ antialias: true })
 
         // set background color
-        renderer.setClearColor('#bbbbbb', 1)
+        renderer.setClearColor('#bbbbbb', 1);
+
         renderer.setSize(width, height)
 
         this.scene = scene
         this.camera = camera
         this.renderer = renderer
+        this.mount.appendChild(this.renderer.domElement)
 
+        // load models
         var loader = new GLTFLoader();
         loader.load('nut.glb',
             (gltf) => this.onModelLoaded(gltf),
             undefined,
             function (error) {
-                console.error("EXCEPTION: " + error);
+                throw new Error("Model loading error");
             });
 
+        // set up lights
         const light = new THREE.PointLight(0xffffff);
         light.position.set(8, 50, -10);
         this.scene.add(light);
@@ -57,7 +60,6 @@ class Scene extends React.Component {
         light2.position.set(2, 50, 10);
         this.scene.add(light2);
 
-        this.mount.appendChild(this.renderer.domElement)
         this.start()
 
         this.orbitControl = new OrbitControls(camera, renderer.domElement);
@@ -65,7 +67,6 @@ class Scene extends React.Component {
 
         this.stats = new Stats();
         document.body.appendChild(this.stats.dom);
-        
         window.addEventListener('resize', () => this.onWindowResize(), false);
     }
 
@@ -87,7 +88,6 @@ class Scene extends React.Component {
         let cnt = 0;
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
-
                 let instance = model.clone();
                 instance.position.x = -(xGap * cols) / 2 + j * xGap
                 instance.position.z = -(zGap * rows) / 2 + i * zGap + (j % 2 === 0 ? zGap / 2 : 0);
@@ -104,8 +104,6 @@ class Scene extends React.Component {
     animateModel(model) {
         // full, half, quarter, sixth
         const fRot = Math.PI * 2;
-       // const hRot = Math.PI;
-        //const qRot = hRot / 2;
         const rot6 = fRot / 6;
         const jumpHeight = 4;
 
@@ -148,9 +146,9 @@ class Scene extends React.Component {
     animate() {
         this.stats.begin();
         this.renderScene();
+        this.orbitControl.update();
         this.stats.end()
         this.frameId = window.requestAnimationFrame(this.animate)
-        this.orbitControl.update();
     }
 
     renderScene() {
