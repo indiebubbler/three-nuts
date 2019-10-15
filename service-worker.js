@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/three-nuts/precache-manifest.b30a37807661ed44c05c63847df2a84d.js"
+  "/three-nuts/precache-manifest.35f25f07211fdb938fd36ed867e54e7c.js"
 );
 
 self.addEventListener('message', (event) => {
